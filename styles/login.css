@@ -1,0 +1,19 @@
+.header{
+    font-size: large;
+    font-weight: bold;
+}
+
+header{
+    padding: 20px;
+    background-color: #333333;
+}
+
+main{
+    padding-right: 150px;
+    background-color: #f2994a;
+}
+
+section{
+    padding-left: 150px;
+    background-color: #f2c34c;
+}
