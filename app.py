@@ -6,7 +6,7 @@ import os
 from config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DISCOVERY_URL
 
 app = Flask(__name__)
-app.secret_key = '123AD0'
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 # Configuración de SQLite con SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
@@ -166,4 +166,4 @@ def logout():
     return redirect('/login')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=os.getenv("FLASK_DEBUG", "False") == "True")
