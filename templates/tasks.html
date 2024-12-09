@@ -1,52 +1,62 @@
 <h1>To Do List</h1>
 
+<!-- Mostrar mensaje de error -->
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+
 <!-- Formulario para añadir una nueva tarea -->
 <form method="POST" action="/tasks">
-    <input type="text" name="task" placeholder="New Task" required>
+    <input type="text" id="task-input" name="task" placeholder="New Task" required>
     
     <!-- Selector de prioridad -->
     <label for="priority">Priority:</label>
-    <select name="priority" required>
+    <select id="priority-select" name="priority" required>
         <option value="1">High</option>
         <option value="2">Medium</option>
         <option value="3" selected>Low</option>
     </select>
     
-    <button type="submit">Add Task</button>
+    <button id="add-task-button" type="submit">Add Task</button>
 </form>
 
+<!-- Lista de tareas -->
 <ul>
     {% for task in tasks %}
-        <li>
-            <!-- Mostrar la tarea y su prioridad -->
-            {{ task.task }} (Priority: 
-            {% if task.priority == 1 %} High
-            {% elif task.priority == 2 %} Medium
-            {% else %} Low
-            {% endif %}
-            )
+    <li>
+        <!-- Mostrar la tarea -->
+        <span>{{ task.task }}</span> (Priority: 
+        {% if task.priority == 1 %} High
+        {% elif task.priority == 2 %} Medium
+        {% else %} Low
+        {% endif %}
+        )
 
-            <!-- Formulario para editar la tarea y su prioridad -->
-            <form method="POST" action="/edit_task/{{ task.id }}">
-                <input type="text" name="task" value="{{ task.task }}" required>
-                
-                <!-- Selector de prioridad en el formulario de edición -->
-                <label for="priority">Priority:</label>
-                <select name="priority" required>
-                    <option value="1" {% if task.priority == 1 %}selected{% endif %}>High</option>
-                    <option value="2" {% if task.priority == 2 %}selected{% endif %}>Medium</option>
-                    <option value="3" {% if task.priority == 3 %}selected{% endif %}>Low</option>
-                </select>
-                
-                <button type="submit">Edit</button>
-            </form>
+        <!-- Formulario para editar la tarea -->
+        <form method="POST" action="/edit_task/{{ task.id }}">
+            <input type="text" id="edit-task-input-{{ task.id }}" name="task" value="{{ task.task }}" required>
             
-            <!-- Enlace para eliminar la tarea -->
-            <a href="/delete_task/{{ task.id }}">Delete</a>
-        </li>
+            <label for="priority-{{ task.id }}">Priority:</label>
+            <select id="edit-priority-select-{{ task.id }}" name="priority" required>
+                <option value="1" {% if task.priority == 1 %}selected{% endif %}>High</option>
+                <option value="2" {% if task.priority == 2 %}selected{% endif %}>Medium</option>
+                <option value="3" {% if task.priority == 3 %}selected{% endif %}>Low</option>
+            </select>
+            
+            <button id="edit-task-button-{{ task.id }}" type="submit">Edit</button>
+        </form>
+
+        <!-- Enlace para eliminar la tarea -->
+        <form method="GET" action="/delete_task/{{ task.id }}">
+            <button id="delete-task-button-{{ task.id }}" type="submit">Delete</button>
+        </form>
+    </li>
     {% endfor %}
 </ul>
 
 <!-- Enlace para cerrar sesión -->
 <a href="/logout">Logout</a>
+
+
+
 

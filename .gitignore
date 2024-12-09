@@ -1,12 +1,13 @@
 # Python
-_pycache_/
+__pycache__/
 *.py[cod]
 *$py.class
  
- 
+
 # Virtual environment
 venv/
 env/
+todolist-env/
 .env
  
 # Flask
@@ -15,7 +16,15 @@ instance/
  
 # SQLite database
 *.db
+
+# Test-related files
+.pytest_cache/
+coverage/
+*.coverage
  
+# Webdrivers (ejecutables del navegador)
+webdrivers/ 
+
 # IDE specific files
 .vscode/
 .idea/
@@ -29,3 +38,6 @@ Thumbs.db
  
 # Temporary files
 *.tmp
+
+#Not important
+todolist-clean/
