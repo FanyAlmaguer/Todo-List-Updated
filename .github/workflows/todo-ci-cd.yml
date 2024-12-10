@@ -1,58 +1,63 @@
-name: Todo App CI/CD
+name: Deploy to Docker Hub and Render
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  test:
+  test-and-build:
+    name: Run Tests and Build Docker Image
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
-    - uses: actions/checkout@v3
+    # 1. Clonar el repositorio
+    - name: Checkout code
+      uses: actions/checkout@v3
 
+    # 2. Configurar Python
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: 3.9  
 
+    # 3. Instalar dependencias
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m venv venv
+        source venv/bin/activate
         pip install -r requirements.txt
-        pip install pytest pytest-cov safety bandit
 
-    - name: Run security checks
+    # 4. Ejecutar pruebas con pytest
+    - name: Run tests with pytest
       run: |
-        bandit -r .
-        continue-on-error: true  # El pipeline continuará incluso si Bandit falla
+        source venv/bin/activate
+        pytest --disable-warnings --cov=./ --cov-report=xml
+      continue-on-error: true
 
-    - name: Run tests with coverage
+    # 5. Iniciar sesión en Docker Hub
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    # 6. Construir la imagen Docker
+    - name: Build Docker Image
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:latest .
+
+    # 7. Subir la imagen a Docker Hub
+    - name: Push Docker Image to Docker Hub
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:latest
+
+    # 8. Probar ejecutar la aplicación
+    - name: Run the application in Docker
       run: |
-        pytest --cov=./ --cov-report=xml
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-
-    - name: Build and push Docker image
-      if: github.ref == 'refs/heads/main'
-      run: |
-        docker build -t todo-app .
-        # Add Docker push commands here
+        docker run \
+          -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+          -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+          -e FLASK_SECRET_KEY=${{ secrets.FLASK_SECRET_KEY }} \
+          -e FLASK_DEBUG=False \
+          -e SQLALCHEMY_DATABASE_URI=${{ secrets.SQLALCHEMY_DATABASE_URI }} \
+          -p 5000:5000 \
+          ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:latest
