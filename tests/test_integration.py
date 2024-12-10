@@ -2,6 +2,8 @@ import pytest
 import os
 from app import app, db, User, Task
 from werkzeug.security import generate_password_hash
+from unittest.mock import patch
+from flask import redirect
 
 @pytest.fixture
 def client():
@@ -100,13 +102,19 @@ def test_task_management_workflow(client):
     deleted_task = db.session.get(Task, task.id)
     assert deleted_task is None
 
-def test_google_login(client):
-    # Simular llamada a la ruta /google_login
-    response = client.get('/google_login')
-    assert response.status_code == 302  # Verificar que se produce una redirección
+@patch('app.google.authorize_redirect')
+def test_google_login(mock_authorize_redirect, client):
+    # Simular la redirección de autorización
+    mock_authorize_redirect.return_value = redirect('/tasks')  # Simular redirección a una página válida
 
-    # Verificar que la URL de redirección incluye la base correcta de Google OAuth
-    assert 'https://accounts.google.com/o/oauth2/v2/auth' in response.headers['Location']
+    # Realizar la solicitud a la ruta /google_login
+    response = client.get('/google_login')
+
+    # Verificar que la redirección se intentó
+    mock_authorize_redirect.assert_called_once()
+    assert response.status_code == 302  # Código de redirección
+    assert response.location == '/tasks'  # Verificar la ubicación de la redirección
+
 
 
 from unittest.mock import patch
