@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-and-build:
-    name: Run Tests and Build Docker Image
+    name: Run Tests, Build Docker Image, and Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -31,7 +31,7 @@ jobs:
         source venv/bin/activate
         pip install -r requirements.txt
 
-    # 4. Ejecutar pruebas con pytest
+    # 4. Ejecutar pruebas con pytest y cobertura
     - name: Run tests with pytest
       run: |
         source venv/bin/activate
@@ -50,14 +50,12 @@ jobs:
     - name: Push Docker Image to Docker Hub
       run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:latest
 
-    # 8. Probar ejecutar la aplicación
-    - name: Run the application in Docker
+    # 8. Notificar a Render para el despliegue
+    - name: Trigger Deploy on Render
+      env:
+        RENDER_API_TOKEN: ${{ secrets.RENDER_API_TOKEN }}
       run: |
-        docker run \
-          -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-          -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-          -e FLASK_SECRET_KEY=${{ secrets.FLASK_SECRET_KEY }} \
-          -e FLASK_DEBUG=False \
-          -e SQLALCHEMY_DATABASE_URI=${{ secrets.SQLALCHEMY_DATABASE_URI }} \
-          -p 5000:5000 \
-          ${{ secrets.DOCKERHUB_USERNAME }}/todo-app:latest
+        curl --request POST --url https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys \
+          --header 'accept: application/json' \
+          --header 'authorization: Bearer $RENDER_API_TOKEN' \
+          --header 'content-type: application/json'
