@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from authlib.integrations.flask_client import OAuth
 import os
 from config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DISCOVERY_URL
+import requests
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
@@ -167,3 +168,27 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=os.getenv("FLASK_DEBUG", "False") == "True")
+
+
+@app.route('/weatherstack', methods=['GET'])
+def get_weatherstack():
+    city = request.args.get('city', 'Guadalajara')  # Ciudad por defecto
+    api_key = os.getenv('WEATHERSTACK_API_KEY')
+    url = f"http://api.weatherstack.com/current?access_key={api_key}&query={city}"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        weather_data = response.json()
+
+        # Extraer datos relevantes de la respuesta
+        weather = {
+            'city': weather_data['location']['name'],
+            'temperature': weather_data['current']['temperature'],
+            'description': weather_data['current']['weather_descriptions'][0],
+            'icon': weather_data['current']['weather_icons'][0]
+        }
+
+        return render_template('weatherstack.html', weather=weather)
+    except requests.exceptions.RequestException as e:
+        return f'Error fetching weather data: {e}', 500

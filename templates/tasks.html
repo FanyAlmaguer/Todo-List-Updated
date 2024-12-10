@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/tasks.css') }}">
 <h1>To Do List</h1>
 
 <!-- Mostrar mensaje de error -->
@@ -24,13 +25,17 @@
 <ul>
     {% for task in tasks %}
     <li>
-        <!-- Mostrar la tarea -->
-        <span>{{ task.task }}</span> (Priority: 
-        {% if task.priority == 1 %} High
-        {% elif task.priority == 2 %} Medium
-        {% else %} Low
-        {% endif %}
-        )
+        <!-- Mostrar la tarea como título -->
+        <div class="task-container">
+            <h2 class="task-title">{{ task.task }}</h2>
+            <p class="task-priority">
+                Priority: 
+                {% if task.priority == 1 %} High
+                {% elif task.priority == 2 %} Medium
+                {% else %} Low
+                {% endif %}
+            </p>
+        </div>
 
         <!-- Formulario para editar la tarea -->
         <form method="POST" action="/edit_task/{{ task.id }}">
@@ -54,8 +59,11 @@
     {% endfor %}
 </ul>
 
-<!-- Enlace para cerrar sesión -->
-<a href="/logout">Logout</a>
+
+<div class="action-buttons">
+    <a href="/weatherstack" class="weather-button">Check Weather with Weatherstack</a>
+    <a href="/logout" class="logout-button">Logout</a>
+</div>
 
 
 
